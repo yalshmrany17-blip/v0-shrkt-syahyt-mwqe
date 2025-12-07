@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase-server"
+import { getSupabaseServer } from "@/lib/supabase-server"
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "الرجاء تعبئة جميع الحقول المطلوبة" }, { status: 400 })
     }
 
-    const supabase = createServerClient()
+    const supabase = await getSupabaseServer()
 
     // Store application in database
     const { error } = await supabase.from("job_applications").insert({

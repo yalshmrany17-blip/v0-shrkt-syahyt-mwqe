@@ -18,13 +18,13 @@ const contactInfo = [
   {
     icon: Phone,
     title: "الهاتف",
-    value: "+966 50 123 4567",
+    value: "+966 54 542 1428",
     description: "متاح 24/7 لخدمتك",
   },
   {
     icon: Mail,
     title: "البريد الإلكتروني",
-    value: "info@jadosaudi.com",
+    value: "Contact@jadosaudi.com",
     description: "سنرد خلال 24 ساعة",
   },
   {
@@ -260,7 +260,7 @@ export default function ContactPage() {
               {/* WhatsApp Button */}
               <div className="mt-8">
                 <a
-                  href="https://wa.me/966501234567"
+                  href="https://wa.me/966545421428"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-3 w-full h-14 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all duration-300"

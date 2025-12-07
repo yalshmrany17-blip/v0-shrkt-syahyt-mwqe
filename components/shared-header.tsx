@@ -18,6 +18,16 @@ export function SharedHeader() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  const navLinks = [
+    { href: "/", label: "الرئيسية" },
+    { href: "/packages", label: "الباقات" },
+    { href: "/about", label: "من نحن" },
+    { href: "/executive-partner", label: "شريكك التنفيذي" },
+    { href: "/events", label: "الفعاليات" },
+    { href: "/blog", label: "المدونة" },
+    { href: "/contact", label: "تواصل معنا" },
+  ]
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
@@ -30,17 +40,8 @@ export function SharedHeader() {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
-          {[
-            { href: "/", label: "الرئيسية" },
-            { href: "/packages", label: "الباقات" },
-            { href: "/about", label: "من نحن" },
-            { href: "/partners", label: "مزودي الخدمات" },
-            { href: "/executive-partner", label: "شريكك التنفيذي" },
-            { href: "/events", label: "الفعاليات" },
-            { href: "/blog", label: "المدونة" },
-            { href: "/contact", label: "تواصل معنا" },
-          ].map((link) => (
+        <nav className="hidden lg:flex items-center gap-5">
+          {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -60,7 +61,7 @@ export function SharedHeader() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-primary-foreground p-2"
+            className="lg:hidden text-primary-foreground p-2"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -70,18 +71,9 @@ export function SharedHeader() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-primary/98 backdrop-blur-xl border-t border-primary-foreground/10">
+        <div className="lg:hidden absolute top-full left-0 right-0 bg-primary/98 backdrop-blur-xl border-t border-primary-foreground/10">
           <nav className="flex flex-col p-6 gap-4">
-            {[
-              { href: "/", label: "الرئيسية" },
-              { href: "/packages", label: "الباقات" },
-              { href: "/about", label: "من نحن" },
-              { href: "/partners", label: "مزودي الخدمات" },
-              { href: "/executive-partner", label: "شريكك التنفيذي" },
-              { href: "/events", label: "الفعاليات" },
-              { href: "/blog", label: "المدونة" },
-              { href: "/contact", label: "تواصل معنا" },
-            ].map((link) => (
+            {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}

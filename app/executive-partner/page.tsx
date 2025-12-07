@@ -100,7 +100,12 @@ export default function ExecutivePartnerPage() {
       {/* Hero Section */}
       <section className="relative pt-20 min-h-[70vh] flex items-center bg-primary overflow-hidden">
         <div className="absolute inset-0">
-          <Image src="/modern-office-conference-meeting-business-professi.jpg" alt="جادوا شريكك التنفيذي" fill className="object-cover opacity-20" />
+          <Image
+            src="/modern-office-conference-meeting-business-professi.jpg"
+            alt="جادوا شريكك التنفيذي"
+            fill
+            className="object-cover opacity-20"
+          />
           <div className="absolute inset-0 bg-gradient-to-l from-primary via-primary/95 to-primary/80" />
         </div>
         <div className="container mx-auto px-4 relative z-10">
@@ -251,10 +256,10 @@ export default function ExecutivePartnerPage() {
               احصل على عرض مخصص
             </Link>
             <a
-              href="mailto:business@jadosaudi.com"
+              href="mailto:Contact@jadosaudi.com"
               className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg transition-colors"
             >
-              business@jadosaudi.com
+              Contact@jadosaudi.com
             </a>
           </div>
         </div>
