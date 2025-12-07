@@ -309,10 +309,11 @@ export default function AIChatWidget() {
               }}
             >
               <span
-                className={`text-3xl sm:text-4xl block ${autoWave ? "animate-wave-hand" : ""}`}
+                className="text-3xl sm:text-4xl block"
                 style={{
                   filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.3))",
                   transformOrigin: "70% 80%",
+                  animation: autoWave ? "waveHand 1s ease-in-out infinite" : "none",
                 }}
               >
                 👋
@@ -329,9 +330,7 @@ export default function AIChatWidget() {
           </div>
 
           <div
-            className={`absolute bottom-full right-0 mb-3 transition-all duration-500 ${
-              showTooltip && !showHand ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
-            }`}
+            className={`absolute bottom-full right-0 mb-3 transition-all duration-500 ${showTooltip && !showHand ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"}`}
           >
             <div className="bg-card text-card-foreground px-3 py-2 rounded-xl shadow-lg border border-border text-xs sm:text-sm whitespace-nowrap">
               كيف أقدر أساعدك؟ 💬
@@ -353,15 +352,11 @@ export default function AIChatWidget() {
             }}
           >
             <div
-              className={`absolute -inset-4 rounded-full bg-gradient-to-r from-accent to-jado-orange blur-xl transition-all duration-500 ${
-                isHovered ? "opacity-60" : isNearby || handExtended ? "opacity-40" : "opacity-20"
-              }`}
+              className={`absolute -inset-4 rounded-full bg-gradient-to-r from-accent to-jado-orange blur-xl transition-all duration-500 ${isHovered ? "opacity-60" : isNearby || handExtended ? "opacity-40" : "opacity-20"}`}
             />
 
             <div
-              className={`absolute -inset-1 rounded-full bg-gradient-to-r from-accent via-jado-orange to-accent transition-all duration-300 ${
-                isHovered ? "opacity-100" : "opacity-70"
-              }`}
+              className={`absolute -inset-1 rounded-full bg-gradient-to-r from-accent via-jado-orange to-accent transition-all duration-300 ${isHovered ? "opacity-100" : "opacity-70"}`}
               style={{
                 padding: "2px",
                 animation: isHovered ? "spin 3s linear infinite" : "none",
@@ -371,9 +366,7 @@ export default function AIChatWidget() {
             </div>
 
             <div
-              className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-accent to-jado-orange flex items-center justify-center shadow-xl transition-all duration-300 ${
-                isHovered ? "scale-105" : ""
-              }`}
+              className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-accent to-jado-orange flex items-center justify-center shadow-xl transition-all duration-300 ${isHovered ? "scale-105" : ""}`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -401,15 +394,7 @@ export default function AIChatWidget() {
       )}
 
       {isOpen && (
-        <div
-          className="fixed inset-0 sm:inset-auto sm:bottom-4 sm:right-4 z-50 
-                     w-full h-full sm:w-[340px] sm:h-[480px] md:w-[380px] md:h-[520px]
-                     bg-card sm:rounded-2xl shadow-2xl overflow-hidden border-0 sm:border sm:border-border 
-                     flex flex-col"
-          style={{
-            animation: "slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
-          }}
-        >
+        <div className="fixed inset-0 sm:inset-auto sm:bottom-4 sm:right-4 z-50 w-full h-full sm:w-[340px] sm:h-[480px] md:w-[380px] md:h-[520px] bg-card sm:rounded-2xl shadow-2xl overflow-hidden border-0 sm:border sm:border-border flex flex-col animate-slideUp">
           <div className="bg-primary text-primary-foreground p-3 sm:p-4 relative">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-3">
@@ -472,9 +457,7 @@ export default function AIChatWidget() {
             {messages.map((message) => (
               <div key={message.id} className={`flex gap-2 ${message.role === "user" ? "flex-row-reverse" : ""}`}>
                 <div
-                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    message.role === "user" ? "bg-accent text-white" : "bg-primary text-primary-foreground"
-                  }`}
+                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${message.role === "user" ? "bg-accent text-white" : "bg-primary text-primary-foreground"}`}
                 >
                   {message.role === "user" ? (
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -488,11 +471,7 @@ export default function AIChatWidget() {
                   )}
                 </div>
                 <div
-                  className={`max-w-[80%] rounded-xl px-3 py-2 ${
-                    message.role === "user"
-                      ? "bg-accent text-white rounded-tr-sm"
-                      : "bg-card border border-border text-card-foreground rounded-tl-sm"
-                  }`}
+                  className={`max-w-[80%] rounded-xl px-3 py-2 ${message.role === "user" ? "bg-accent text-white rounded-tr-sm" : "bg-card border border-border text-card-foreground rounded-tl-sm"}`}
                 >
                   <p className="text-xs sm:text-sm leading-relaxed">{message.content}</p>
                 </div>
@@ -557,33 +536,6 @@ export default function AIChatWidget() {
           </form>
         </div>
       )}
-
-      <style jsx>{`
-        @keyframes wave-hand {
-          0%, 100% { transform: rotate(0deg); }
-          10% { transform: rotate(14deg); }
-          20% { transform: rotate(-8deg); }
-          30% { transform: rotate(14deg); }
-          40% { transform: rotate(-4deg); }
-          50% { transform: rotate(10deg); }
-          60% { transform: rotate(0deg); }
-        }
-        
-        .animate-wave-hand {
-          animation: wave-hand 1s ease-in-out infinite;
-        }
-        
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px) scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-      `}</style>
     </>
   )
 }
