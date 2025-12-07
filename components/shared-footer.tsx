@@ -174,7 +174,7 @@ export function SharedFooter() {
           {/* Quick Links */}
           <div>
             <h4 className="text-sm font-bold mb-4">روابط سريعة</h4>
-            <ul className="space-y-2">
+            <ul className="flex flex-col gap-2">
               {[
                 { label: "الرئيسية", href: "/" },
                 { label: "الباقات", href: "/packages" },
@@ -199,7 +199,7 @@ export function SharedFooter() {
           {/* Destinations */}
           <div>
             <h4 className="text-sm font-bold mb-4">الوجهات</h4>
-            <ul className="space-y-2">
+            <ul className="flex flex-col gap-2">
               {["الرياض", "جدة", "العلا", "أبها", "الدمام"].map((dest) => (
                 <li key={dest}>
                   <Link href="/packages" className="text-secondary hover:text-jado-sand transition-colors text-sm">
@@ -210,24 +210,19 @@ export function SharedFooter() {
             </ul>
           </div>
 
-          {/* Contact Info - تحديث الأرقام */}
+          {/* Contact Info */}
           <div>
-            <h4 className="text-sm font-bold mb-4">تواصل معنا</h4>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
-                <span className="text-secondary text-sm">{CONTACT_INFO.address}</span>
-              </li>
+            <h4 className="text-lg font-bold text-primary-foreground mb-6">تواصل معنا</h4>
+            <ul className="flex flex-col gap-4">
               <li className="flex items-center gap-2 group">
-                <WhatsAppIcon className="w-4 h-4 text-accent group-hover:text-green-500 transition-colors" />
+                <MapPin className="w-4 h-4 text-accent group-hover:text-jado-sand transition-colors flex-shrink-0" />
                 <a
-                  href={CONTACT_INFO.whatsappLink}
+                  href={CONTACT_INFO.mapLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-secondary hover:text-green-500 transition-colors text-sm"
-                  dir="ltr"
+                  className="text-secondary hover:text-jado-sand transition-colors text-sm"
                 >
-                  {CONTACT_INFO.phoneDisplay}
+                  {CONTACT_INFO.address}
                 </a>
               </li>
               <li className="flex items-center gap-2 group">

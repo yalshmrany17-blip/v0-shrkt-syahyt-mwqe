@@ -13,51 +13,36 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SharedHeader } from "@/components/shared-header"
 import { SharedFooter } from "@/components/shared-footer"
 import { MapPin, Phone, Mail, Clock, Send, MessageCircle, CheckCircle, ArrowLeft } from "lucide-react"
+import { CONTACT_INFO } from "@/lib/constants"
 
 const contactInfo = [
   {
     icon: Phone,
     title: "الهاتف",
-    value: "+966 54 542 1428",
+    value: CONTACT_INFO.phoneDisplay,
     description: "متاح 24/7 لخدمتك",
+    href: `tel:${CONTACT_INFO.phone}`,
   },
   {
     icon: Mail,
     title: "البريد الإلكتروني",
-    value: "Contact@jadosaudi.com",
+    value: CONTACT_INFO.email,
     description: "سنرد خلال 24 ساعة",
+    href: `mailto:${CONTACT_INFO.email}`,
   },
   {
     icon: MapPin,
     title: "العنوان",
-    value: "شارع الملك فهد، حي العليا",
-    description: "الرياض، المملكة العربية السعودية",
+    value: "منطقة عسير",
+    description: "المملكة العربية السعودية",
+    href: CONTACT_INFO.mapLink,
   },
   {
     icon: Clock,
     title: "ساعات العمل",
     value: "السبت - الخميس: 9 ص - 6 م",
     description: "الجمعة: 2 م - 6 م",
-  },
-]
-
-const faqs = [
-  {
-    question: "كيف يمكنني حجز رحلة؟",
-    answer:
-      "يمكنك حجز رحلتك بسهولة من خلال موقعنا الإلكتروني أو الاتصال بنا مباشرة. اختر الباقة المناسبة، واملأ البيانات المطلوبة.",
-  },
-  {
-    question: "ما هي سياسة الإلغاء؟",
-    answer: "يمكن إلغاء الحجز مجاناً حتى 48 ساعة قبل موعد الرحلة. بعد ذلك، قد تطبق رسوم إلغاء حسب نوع الباقة.",
-  },
-  {
-    question: "هل تشمل الباقات الإقامة والوجبات؟",
-    answer: "نعم، معظم باقاتنا تشمل الإقامة في فنادق مختارة والوجبات الأساسية. تفاصيل كل باقة موضحة بوضوح.",
-  },
-  {
-    question: "هل يمكن تخصيص الرحلة؟",
-    answer: "بالطبع! نقدم خدمة تخصيص الرحلات حسب رغباتك واحتياجاتك الخاصة. تواصل معنا لمناقشة متطلباتك.",
+    href: null,
   },
 ]
 
@@ -88,6 +73,26 @@ export default function ContactPage() {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
+  const faqs = [
+    {
+      question: "كيف يمكنني حجز رحلة؟",
+      answer:
+        "يمكنك حجز رحلتك بسهولة من خلال موقعنا الإلكتروني أو الاتصال بنا مباشرة. اختر الباقة المناسبة، واملأ البيانات المطلوبة.",
+    },
+    {
+      question: "ما هي سياسة الإلغاء؟",
+      answer: "يمكن إلغاء الحجز مجاناً حتى 48 ساعة قبل موعد الرحلة. بعد ذلك، قد تطبق رسوم إلغاء حسب نوع الباقة.",
+    },
+    {
+      question: "هل تشمل الباقات الإقامة والوجبات؟",
+      answer: "نعم، معظم باقاتنا تشمل الإقامة في فنادق مختارة والوجبات الأساسية. تفاصيل كل باقة موضحة بوضوح.",
+    },
+    {
+      question: "هل يمكن تخصيص الرحلة؟",
+      answer: "بالطبع! نقدم خدمة تخصيص الرحلات حسب رغباتك واحتياجاتك الخاصة. تواصل معنا لمناقشة متطلباتك.",
+    },
+  ]
+
   return (
     <div className="min-h-screen bg-background">
       <SharedHeader />
@@ -115,19 +120,38 @@ export default function ContactPage() {
       <section className="py-16 px-6 -mt-20 relative z-20">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {contactInfo.map((info, index) => (
-              <div
-                key={index}
-                className="bg-card rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 text-center group"
-              >
-                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-accent transition-colors duration-300">
-                  <info.icon className="w-8 h-8 text-primary group-hover:text-accent-foreground transition-colors" />
+            {contactInfo.map((info, index) => {
+              const CardContent = (
+                <>
+                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-accent transition-colors duration-300">
+                    <info.icon className="w-8 h-8 text-primary group-hover:text-accent-foreground transition-colors" />
+                  </div>
+                  <h3 className="font-bold text-primary mb-2">{info.title}</h3>
+                  <p className="text-accent font-medium mb-1">{info.value}</p>
+                  <p className="text-muted-foreground text-sm">{info.description}</p>
+                </>
+              )
+
+              return (
+                <div
+                  key={index}
+                  className="bg-card rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 text-center group"
+                >
+                  {info.href ? (
+                    <a
+                      href={info.href}
+                      target={info.href.startsWith("http") ? "_blank" : undefined}
+                      rel={info.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                      className="block"
+                    >
+                      {CardContent}
+                    </a>
+                  ) : (
+                    CardContent
+                  )}
                 </div>
-                <h3 className="font-bold text-primary mb-2">{info.title}</h3>
-                <p className="text-accent font-medium mb-1">{info.value}</p>
-                <p className="text-muted-foreground text-sm">{info.description}</p>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </section>
@@ -142,7 +166,7 @@ export default function ContactPage() {
               <h2 className="text-4xl font-bold text-primary mb-8">أرسل لنا رسالة</h2>
 
               {!isSubmitted ? (
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <Label htmlFor="name" className="text-primary font-medium mb-2 block">
@@ -260,7 +284,7 @@ export default function ContactPage() {
               {/* WhatsApp Button */}
               <div className="mt-8">
                 <a
-                  href="https://wa.me/966545421428"
+                  href={CONTACT_INFO.whatsappLink}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-3 w-full h-14 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all duration-300"
@@ -271,15 +295,40 @@ export default function ContactPage() {
               </div>
             </div>
 
-            {/* FAQ */}
+            {/* Map & FAQ */}
             <div>
-              <span className="text-accent font-medium mb-4 block">أسئلة شائعة</span>
-              <h2 className="text-4xl font-bold text-primary mb-8">كيف نساعدك؟</h2>
+              {/* Google Maps Embed */}
+              <div className="rounded-3xl overflow-hidden shadow-lg mb-8 h-[300px]">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d238107.73547399786!2d42.35!3d18.25!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x15fb0c0bd72a3589%3A0x53e7a8e3e5e7f7c6!2sAsir%20Province%2C%20Saudi%20Arabia!5e0!3m2!1sen!2s!4v1702000000000!5m2!1sen!2s"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="موقع جادوا في عسير"
+                />
+              </div>
 
-              <div className="space-y-4">
+              {/* Open in Google Maps Button */}
+              <a
+                href={CONTACT_INFO.mapLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl mb-8 transition-all duration-300"
+              >
+                <MapPin className="w-5 h-5" />
+                افتح في خرائط جوجل
+              </a>
+
+              <span className="text-accent font-medium mb-4 block">أسئلة شائعة</span>
+              <h3 className="text-2xl font-bold text-primary mb-6">كيف نساعدك؟</h3>
+
+              <div className="flex flex-col gap-4">
                 {faqs.map((faq, index) => (
                   <div key={index} className="bg-card rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                    <h3 className="font-bold text-primary mb-3">{faq.question}</h3>
+                    <h4 className="font-bold text-primary mb-3">{faq.question}</h4>
                     <p className="text-muted-foreground leading-relaxed">{faq.answer}</p>
                   </div>
                 ))}

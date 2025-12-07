@@ -446,7 +446,7 @@ export default function AIChatWidget() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 bg-background">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 flex flex-col gap-3 bg-background">
             {messages.length === 0 && (
               <div className="text-center py-4 sm:py-6">
                 <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 rounded-2xl bg-accent/10 flex items-center justify-center">

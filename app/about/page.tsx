@@ -85,7 +85,7 @@ export default function AboutPage() {
             <div>
               <span className="text-accent font-medium mb-4 block">من نحن</span>
               <h2 className="text-4xl md:text-5xl font-bold text-primary mb-8 leading-tight">نصنع ذكريات لا تُنسى</h2>
-              <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
+              <div className="flex flex-col gap-6 text-lg text-muted-foreground leading-relaxed">
                 <p>
                   تأسست شركة جادوا للسياحة والسفر في عام 2020 بهدف تقديم تجارب سياحية استثنائية تعكس جمال وتنوع المملكة
                   العربية السعودية.
@@ -101,7 +101,7 @@ export default function AboutPage() {
             {/* Images Grid */}
             <div className="relative">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-4">
+                <div className="flex flex-col gap-4">
                   <div className="h-48 rounded-3xl overflow-hidden">
                     <Image
                       src="/alula-hegra-ancient-nabataean-tombs-carved-in-rock.jpg"
@@ -121,7 +121,7 @@ export default function AboutPage() {
                     />
                   </div>
                 </div>
-                <div className="space-y-4 pt-12">
+                <div className="flex flex-col gap-4 pt-12">
                   <div className="h-64 rounded-3xl overflow-hidden">
                     <Image
                       src="/jeddah-al-balad-historic-district-with-traditional.jpg"
@@ -218,7 +218,7 @@ export default function AboutPage() {
             {/* Timeline Line */}
             <div className="absolute right-8 top-0 bottom-0 w-0.5 bg-secondary" />
 
-            <div className="space-y-12">
+            <div className="flex flex-col gap-12">
               {timeline.map((item, index) => (
                 <div key={index} className="relative flex gap-8 items-start">
                   {/* Year Circle */}
