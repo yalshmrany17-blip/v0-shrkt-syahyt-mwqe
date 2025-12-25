@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { use } from "react"
+import { useParams } from "next/navigation"
 
 const packagesData = {
   riyadh: {
@@ -272,8 +272,9 @@ const packagesData = {
   },
 }
 
-export default function PackageDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+export default function PackageDetailPage() {
+  const params = useParams()
+  const id = params.id as string
   const pkg = packagesData[id as keyof typeof packagesData]
   const [activeDay, setActiveDay] = useState(0)
   const [scrollProgress, setScrollProgress] = useState(0)
@@ -327,7 +328,10 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
       >
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="text-white hover:text-secondary transition-colors flex items-center gap-2 group">
+            <Link
+              href="/packages"
+              className="text-white hover:text-secondary transition-colors flex items-center gap-2 group"
+            >
               <svg
                 width="24"
                 height="24"
@@ -349,7 +353,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
             </div>
 
             <Link
-              href="/booking"
+              href={`/booking?package=${id}`}
               className="bg-accent hover:bg-accent/90 text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-lg hover:shadow-accent/50"
             >
               احجز الآن
@@ -569,7 +573,7 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <Link
-                href="/booking"
+                href={`/booking?package=${id}`}
                 className="bg-accent hover:bg-accent/90 text-white px-12 py-5 rounded-full font-bold text-lg shadow-2xl hover:shadow-accent/50 transition-all inline-flex items-center gap-3 hover:scale-105"
               >
                 احجز هذه الباقة
@@ -595,10 +599,8 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
               </div>
               <div className="flex items-center gap-2">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 6v6l4 2" />
                 </svg>
                 <span>{pkg.reviews} مسافر</span>
               </div>

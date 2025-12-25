@@ -33,7 +33,7 @@ function BookingContent() {
   const searchParams = useSearchParams()
   const preSelectedPackage = searchParams.get("package") || ""
 
-  const [currentStep, setCurrentStep] = useState(1)
+  const [currentStep, setCurrentStep] = useState(preSelectedPackage ? 2 : 1)
   const [selectedPackage, setSelectedPackage] = useState(preSelectedPackage)
   const [startDate, setStartDate] = useState<Date>()
   const [adults, setAdults] = useState("2")
