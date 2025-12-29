@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Readex_Pro, DM_Sans } from "next/font/google"
 import "./globals.css"
 import AIChatWidget from "@/components/ai-chat-widget"
+import { Analytics } from "@vercel/analytics/next"
 
 const readexPro = Readex_Pro({
   subsets: ["arabic", "latin"],
@@ -34,6 +35,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         {children}
         <AIChatWidget />
+        <Analytics />
       </body>
     </html>
   )
