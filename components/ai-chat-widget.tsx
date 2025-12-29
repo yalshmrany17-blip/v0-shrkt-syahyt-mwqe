@@ -11,6 +11,7 @@ interface Message {
 
 export default function AIChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isFullScreen, setIsFullScreen] = useState(true)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -96,6 +97,7 @@ export default function AIChatWidget() {
       inputRef.current?.focus()
       setShowTooltip(false)
       setHandExtended(false)
+      setIsFullScreen(true)
     }
   }, [isOpen])
 
@@ -276,6 +278,11 @@ export default function AIChatWidget() {
 
   const showHand = handExtended || isHovered || isNearby
 
+  const handleClose = () => {
+    setIsOpen(false)
+    setIsFullScreen(true)
+  }
+
   return (
     <>
       {!isOpen && (
@@ -394,58 +401,95 @@ export default function AIChatWidget() {
       )}
 
       {isOpen && (
-        <div className="fixed inset-0 sm:inset-auto sm:bottom-4 sm:right-4 z-50 w-full h-full sm:w-[340px] sm:h-[480px] md:w-[380px] md:h-[520px] bg-card sm:rounded-2xl shadow-2xl overflow-hidden border-0 sm:border sm:border-border flex flex-col animate-slideUp">
-          <div className="bg-primary text-primary-foreground p-3 sm:p-4 relative">
+        <div
+          className={`fixed z-50 bg-card shadow-2xl overflow-hidden flex flex-col animate-slideUp transition-all duration-300 ${
+            isFullScreen
+              ? "inset-0 rounded-none"
+              : "inset-4 sm:inset-auto sm:bottom-4 sm:right-4 sm:w-[380px] sm:h-[520px] rounded-2xl border border-border"
+          }`}
+        >
+          <div className="bg-primary text-primary-foreground p-4 relative">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-accent to-jado-orange flex items-center justify-center">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-accent to-jado-orange flex items-center justify-center">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
+                      width="20"
+                      height="20"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
+                      className="sm:w-6 sm:h-6"
                     >
                       <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
                     </svg>
                   </div>
-                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border border-primary" />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-primary" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm sm:text-base">مساعد جادوا</h3>
-                  <p className="text-[10px] sm:text-xs text-white/60">متصل الآن</p>
+                  <h3 className="font-bold text-base sm:text-lg">مساعد جادوا</h3>
+                  <p className="text-xs sm:text-sm text-white/60">متصل الآن • جاهز لمساعدتك</p>
                 </div>
               </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsFullScreen(!isFullScreen)}
+                  className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all"
+                  title={isFullScreen ? "تصغير" : "تكبير"}
+                >
+                  {isFullScreen ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                      <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+                      <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                      <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+                    </svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                      <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+                      <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                      <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+                    </svg>
+                  )}
+                </button>
+                <button
+                  onClick={handleClose}
+                  className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 sm:p-4 flex flex-col gap-3 bg-background">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 bg-background">
             {messages.length === 0 && (
-              <div className="text-center py-4 sm:py-6">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 rounded-2xl bg-accent/10 flex items-center justify-center">
-                  <span className="text-2xl sm:text-3xl">🌟</span>
+              <div className="text-center py-8 sm:py-12">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 rounded-2xl bg-accent/10 flex items-center justify-center">
+                  <span className="text-4xl sm:text-5xl">🌟</span>
                 </div>
-                <h4 className="text-sm sm:text-base font-bold text-foreground mb-1">مرحباً بك!</h4>
-                <p className="text-xs text-muted-foreground mb-3">كيف يمكنني مساعدتك؟</p>
-                <div className="flex flex-wrap gap-1.5 justify-center">
-                  {["الباقات المتاحة", "حجز رحلة", "معلومات العلا"].map((suggestion) => (
+                <h4 className="text-lg sm:text-xl font-bold text-foreground mb-2">مرحباً بك في مساعد جادوا!</h4>
+                <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-md mx-auto">
+                  أنا هنا لمساعدتك في التخطيط لرحلتك المثالية. اسألني عن أي شيء!
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center max-w-lg mx-auto">
+                  {[
+                    "ما هي الباقات المتاحة؟",
+                    "أريد حجز رحلة للعلا",
+                    "ما أفضل وقت لزيارة أبها؟",
+                    "كم سعر رحلة جدة؟",
+                  ].map((suggestion) => (
                     <button
                       key={suggestion}
                       onClick={() => handleSuggestion(suggestion)}
                       disabled={isLoading}
-                      className="px-2.5 py-1.5 text-[10px] sm:text-xs bg-secondary/50 text-secondary-foreground rounded-full hover:bg-accent hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 text-sm bg-secondary/50 text-secondary-foreground rounded-full hover:bg-accent hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {suggestion}
                     </button>
@@ -455,45 +499,45 @@ export default function AIChatWidget() {
             )}
 
             {messages.map((message) => (
-              <div key={message.id} className={`flex gap-2 ${message.role === "user" ? "flex-row-reverse" : ""}`}>
+              <div key={message.id} className={`flex gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}>
                 <div
-                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${message.role === "user" ? "bg-accent text-white" : "bg-primary text-primary-foreground"}`}
+                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${message.role === "user" ? "bg-accent text-white" : "bg-primary text-primary-foreground"}`}
                 >
                   {message.role === "user" ? (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                       <circle cx="12" cy="7" r="4" />
                     </svg>
                   ) : (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
                     </svg>
                   )}
                 </div>
                 <div
-                  className={`max-w-[80%] rounded-xl px-3 py-2 ${message.role === "user" ? "bg-accent text-white rounded-tr-sm" : "bg-card border border-border text-card-foreground rounded-tl-sm"}`}
+                  className={`max-w-[75%] rounded-2xl px-4 py-3 ${message.role === "user" ? "bg-accent text-white rounded-tr-sm" : "bg-card border border-border text-card-foreground rounded-tl-sm"}`}
                 >
-                  <p className="text-xs sm:text-sm leading-relaxed">{message.content}</p>
+                  <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">{message.content}</p>
                 </div>
               </div>
             ))}
 
             {isLoading && messages[messages.length - 1]?.role === "user" && (
-              <div className="flex gap-2">
-                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="flex gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
                   </svg>
                 </div>
-                <div className="bg-card border border-border rounded-xl rounded-tl-sm px-3 py-2">
-                  <div className="flex gap-1">
-                    <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" />
+                <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-4 py-3">
+                  <div className="flex gap-1.5">
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
                     <div
-                      className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce"
+                      className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
                       style={{ animationDelay: "0.1s" }}
                     />
                     <div
-                      className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce"
+                      className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
                       style={{ animationDelay: "0.2s" }}
                     />
                   </div>
@@ -503,31 +547,23 @@ export default function AIChatWidget() {
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={handleSubmit} className="p-2 sm:p-3 border-t border-border bg-card">
-            <div className="flex gap-2">
+          <form onSubmit={handleSubmit} className="p-4 border-t border-border bg-card">
+            <div className="flex gap-3 max-w-4xl mx-auto">
               <input
                 ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="اكتب رسالتك..."
-                className="flex-1 px-3 py-2 text-xs sm:text-sm bg-muted rounded-xl border-0 focus:outline-none focus:ring-2 focus:ring-accent"
+                placeholder="اكتب رسالتك هنا..."
+                className="flex-1 px-4 py-3 text-sm sm:text-base bg-muted rounded-xl border-0 focus:outline-none focus:ring-2 focus:ring-accent"
                 disabled={isLoading}
               />
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-accent text-white flex items-center justify-center disabled:opacity-50 hover:bg-accent/90 transition-colors"
+                className="w-12 h-12 rounded-xl bg-accent hover:bg-accent/90 text-white flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  style={{ transform: "rotate(180deg)" }}
-                >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="m22 2-7 20-4-9-9-4Z" />
                   <path d="M22 2 11 13" />
                 </svg>
