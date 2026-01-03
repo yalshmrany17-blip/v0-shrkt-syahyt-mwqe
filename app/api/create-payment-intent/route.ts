@@ -1,17 +1,24 @@
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripeKey = process.env.STRIPE_SECRET_KEY || "sk_test_dummy_key_for_build"
+const stripe = new Stripe(stripeKey, {
   apiVersion: "2024-12-18.acacia",
 })
 
 export async function POST(request: Request) {
   try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return NextResponse.json(
+        { error: "Stripe is not configured. Please add STRIPE_SECRET_KEY to environment variables." },
+        { status: 500 },
+      )
+    }
+
     const { bookingId, amount } = await request.json()
 
-    // Create a PaymentIntent with Stripe
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount * 100, // Convert to halalas (smallest currency unit)
+      amount: amount * 100,
       currency: "sar",
       metadata: {
         bookingId,
