@@ -48,6 +48,7 @@ async function sendBookingEmail(booking: {
         .detail-value { font-weight: 600; color: #001c43; }
         .total-row { background: #001c43; color: white; padding: 15px 20px; border-radius: 8px; margin-top: 15px; }
         .cta-button { display: inline-block; background: #af4b32; color: white; padding: 15px 40px; border-radius: 30px; text-decoration: none; font-weight: 600; margin: 20px 0; }
+        .invoice-button { display: inline-block; background: #f0f0f0; color: #001c43; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 500; margin: 10px 5px; }
         .footer { background: #f8f9fa; padding: 20px 30px; text-align: center; color: #666; font-size: 14px; }
         .social-links { margin: 15px 0; }
         .social-links a { margin: 0 10px; color: #001c43; text-decoration: none; }
@@ -94,9 +95,10 @@ async function sendBookingEmail(booking: {
             </div>
           </div>
           
-          <p>سيتواصل معك أحد ممثلي خدمة العملاء خلال 24 ساعة لتأكيد التفاصيل وترتيب الدفع.</p>
+          <p>يمكنك الدفع الآن عبر البطاقة البنكية أو التواصل معنا عبر واتساب لترتيب الدفع.</p>
           
           <center>
+            <a href="${process.env.NEXT_PUBLIC_BASE_URL || "https://jadosaudi.com"}/api/invoice/${booking.bookingId}" class="invoice-button">📄 تحميل الفاتورة</a>
             <a href="${CONTACT_INFO.whatsappLink}" class="cta-button">تواصل معنا عبر واتساب</a>
           </center>
         </div>
@@ -259,6 +261,8 @@ export async function POST(request: Request) {
       notes,
     } = body
 
+    console.log("[v0] Received booking request:", { packageName, customerName, customerEmail })
+
     // Validate required fields
     if (!packageName || !customerName || !customerEmail || !customerPhone || !travelDate) {
       return NextResponse.json(
@@ -270,8 +274,9 @@ export async function POST(request: Request) {
       )
     }
 
-    // Save booking to Supabase using getSupabaseAdmin to bypass RLS
     const supabase = getSupabaseAdmin()
+
+    console.log("[v0] Inserting booking into Supabase...")
 
     const { data, error } = await supabase
       .from("bookings")
@@ -284,19 +289,30 @@ export async function POST(request: Request) {
         adults_count: adultsCount || 1,
         children_count: childrenCount || 0,
         total_price: totalPrice,
-        notes,
+        notes: notes || null,
         status: "pending",
+        payment_status: "pending",
       })
       .select()
       .single()
 
     if (error) {
       console.error("[v0] Supabase error:", error)
-      throw error
+      return NextResponse.json(
+        {
+          success: false,
+          message: "حدث خطأ أثناء حفظ الحجز. يرجى المحاولة مرة أخرى",
+          error: error.message,
+        },
+        { status: 500 },
+      )
     }
+
+    console.log("[v0] Booking created successfully:", data)
 
     const bookingId = data?.id ? `JDO-${data.id}` : `JDO-${Date.now()}`
 
+    // Send emails
     const emailResult = await sendBookingEmail({
       customerName,
       customerEmail,
@@ -341,6 +357,7 @@ export async function POST(request: Request) {
       {
         success: false,
         message: "حدث خطأ أثناء الحجز. يرجى المحاولة مرة أخرى",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 },
     )
