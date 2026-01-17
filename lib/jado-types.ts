@@ -11,15 +11,41 @@ export enum AccessibilityMode {
 }
 
 export enum BookingStage {
-  Discovery = "Discovery",
-  Diagnosis = "Diagnosis",
-  Planning = "Planning",
-  Invoicing = "Invoicing",
+  Welcome = "Welcome", // الترحيب والتعرف على الاسم
+  Discovery = "Discovery", // اكتشاف الوجهة المرغوبة
+  Diagnosis = "Diagnosis", // التشخيص: المزاج، الميزانية، المدة
+  Planning = "Planning", // عرض الخيارات والتفاصيل
+  Invoicing = "Invoicing", // الفاتورة
+  Paid = "Paid", // مدفوع - عرض التذاكر
 }
 
 export interface GroundingChunk {
   web?: { uri: string; title: string }
   maps?: { uri: string; title: string; placeId?: string }
+}
+
+export interface DayProgram {
+  day: number
+  title: string
+  activities: {
+    time: string
+    activity: string
+    location?: string
+  }[]
+}
+
+export interface DestinationDetails {
+  id: string
+  title: string
+  description: string
+  duration: string
+  price: number
+  priceLevel: "💰" | "💰💰" | "💰💰💰"
+  imageUrl: string
+  highlights: string[]
+  includes: string[]
+  excludes: string[]
+  program: DayProgram[]
 }
 
 export interface ProposalOption {
@@ -28,6 +54,7 @@ export interface ProposalOption {
   description: string
   imageKeyword: string
   priceLevel: "💰" | "💰💰" | "💰💰💰"
+  details?: DestinationDetails
 }
 
 export interface Proposal {
@@ -45,6 +72,7 @@ export interface Message {
   imageUrl?: string
   groundingChunks?: GroundingChunk[]
   proposal?: Proposal
+  showDetails?: DestinationDetails
 }
 
 export interface InvoiceItem {
@@ -76,4 +104,9 @@ export interface ChatState {
   isLoading: boolean
   itinerary: Itinerary | null
   stage: BookingStage
+  customerName?: string
+  selectedDestination?: string
+  travelMood?: string
+  budget?: string
+  duration?: string
 }

@@ -11,12 +11,18 @@ interface MessageBubbleProps {
   isPlaying?: boolean
   onToggleAudio?: (id: string, base64: string) => void
   onSelectOption?: (option: ProposalOption) => void
+  onExploreMore?: (option: ProposalOption) => void
 }
 
-export default function JadoMessageBubble({ message, isPlaying, onToggleAudio, onSelectOption }: MessageBubbleProps) {
+export default function JadoMessageBubble({
+  message,
+  isPlaying,
+  onToggleAudio,
+  onSelectOption,
+  onExploreMore,
+}: MessageBubbleProps) {
   const isUser = message.sender === Sender.User
 
-  // Render sources - hide maps to prevent booking bypass
   const renderGrounding = (chunks: GroundingChunk[]) => {
     const webChunks = chunks.filter((c) => c.web && !c.maps)
     if (webChunks.length === 0) return null
@@ -41,12 +47,16 @@ export default function JadoMessageBubble({ message, isPlaying, onToggleAudio, o
 
   const getImageUrl = (keyword: string) => {
     const lower = keyword.toLowerCase()
-    if (lower.includes("alula")) return "https://images.unsplash.com/photo-1589820296156-2454edd8a80c?q=80&w=600"
-    if (lower.includes("red sea") || lower.includes("diving"))
+    if (lower.includes("alula") || lower.includes("العلا"))
+      return "https://images.unsplash.com/photo-1589820296156-2454edd8a80c?q=80&w=600"
+    if (lower.includes("red sea") || lower.includes("diving") || lower.includes("بحر"))
       return "https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?q=80&w=600"
-    if (lower.includes("jeddah")) return "https://images.unsplash.com/photo-1565552632288-444d370b4718?q=80&w=600"
-    if (lower.includes("abha")) return "https://images.unsplash.com/photo-1629196914375-f7e48f477b6d?q=80&w=600"
-    if (lower.includes("riyadh")) return "https://images.unsplash.com/photo-1566249673998-d6995038f972?q=80&w=600"
+    if (lower.includes("jeddah") || lower.includes("جدة") || lower.includes("جده"))
+      return "https://images.unsplash.com/photo-1565552632288-444d370b4718?q=80&w=600"
+    if (lower.includes("abha") || lower.includes("أبها") || lower.includes("ابها") || lower.includes("عسير"))
+      return "https://images.unsplash.com/photo-1629196914375-f7e48f477b6d?q=80&w=600"
+    if (lower.includes("riyadh") || lower.includes("الرياض") || lower.includes("رياض"))
+      return "https://images.unsplash.com/photo-1566249673998-d6995038f972?q=80&w=600"
     return "https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=600"
   }
 
@@ -77,13 +87,11 @@ export default function JadoMessageBubble({ message, isPlaying, onToggleAudio, o
 
             <p className="whitespace-pre-wrap text-sm leading-relaxed font-normal">{message.text}</p>
 
-            {/* Grounding / Sources */}
             {message.groundingChunks &&
               message.groundingChunks.length > 0 &&
               !isUser &&
               renderGrounding(message.groundingChunks)}
 
-            {/* Audio button */}
             {message.isAudio && message.audioData && (
               <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-50/10">
                 <button
@@ -145,7 +153,6 @@ export default function JadoMessageBubble({ message, isPlaying, onToggleAudio, o
           </div>
         </div>
 
-        {/* Timestamp */}
         <span className={`text-[10px] text-gray-400/80 px-2 mt-1 ${isUser ? "text-left" : "text-right"}`}>
           {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </span>
@@ -156,28 +163,40 @@ export default function JadoMessageBubble({ message, isPlaying, onToggleAudio, o
               {message.proposal.options.map((option, idx) => (
                 <div
                   key={idx}
-                  className="min-w-[240px] w-[240px] bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden snap-center flex flex-col group hover:shadow-xl transition-all hover:-translate-y-1"
+                  className="min-w-[260px] w-[260px] bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden snap-center flex flex-col group hover:shadow-xl transition-all hover:-translate-y-1"
                 >
-                  <div className="h-32 relative overflow-hidden">
+                  <div className="h-36 relative overflow-hidden">
                     <img
                       src={getImageUrl(option.imageKeyword) || "/placeholder.svg"}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       alt={option.title}
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                     <div className="absolute top-2 right-2 bg-white/90 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-sm">
                       {option.priceLevel}
                     </div>
+                    <div className="absolute bottom-2 right-2 left-2">
+                      <h3 className="font-bold text-white text-sm drop-shadow-lg">{option.title}</h3>
+                    </div>
                   </div>
                   <div className="p-4 flex flex-col flex-1">
-                    <h3 className="font-bold text-[#001c43] mb-1">{option.title}</h3>
                     <p className="text-xs text-gray-500 line-clamp-2 mb-4 flex-1">{option.description}</p>
-                    <button
-                      onClick={() => onSelectOption && onSelectOption(option)}
-                      className="w-full py-2 bg-[#f5f3ef] text-[#001c43] border border-[#001c43]/20 hover:bg-[#001c43] hover:text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
-                    >
-                      <span>اختار هذا</span>
-                      <span>👈</span>
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => onExploreMore && onExploreMore(option)}
+                        className="flex-1 py-2.5 bg-[#f5f3ef] text-[#001c43] border border-[#c8a45e]/30 hover:bg-[#c8a45e]/20 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
+                      >
+                        <span>🔍</span>
+                        <span>اكتشف المزيد</span>
+                      </button>
+                      <button
+                        onClick={() => onSelectOption && onSelectOption(option)}
+                        className="flex-1 py-2.5 bg-[#001c43] text-white hover:bg-[#002855] rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
+                      >
+                        <span>احجز</span>
+                        <span>👈</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
