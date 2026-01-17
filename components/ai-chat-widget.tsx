@@ -2,63 +2,73 @@
 
 import type React from "react"
 import { useState, useRef, useEffect, useCallback } from "react"
+import { Sender, BookingStage } from "@/lib/jado-types"
+import type { Message, Itinerary, ProposalOption } from "@/lib/jado-types"
+import JadoMessageBubble from "./jado-message-bubble"
+import JadoItineraryView from "./jado-itinerary-view"
+import JadoTimelineView from "./jado-timeline-view"
+import JadoProgressBar from "./jado-progress-bar"
 
-interface Message {
-  id: string
-  role: "user" | "assistant"
-  content: string
-}
+const JADO_AVATAR =
+  "/images/d8-b5-d9-88-d8-b1-d8-a9-20-d8-ac-d8-a7-d8-af-d9-88-d8-a7-20-d9-85-d9-82-d8-b1-d8-a8-d8-a9-20.png"
 
 export default function AIChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
-  const [isFullScreen, setIsFullScreen] = useState(true)
   const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState("")
+  const [inputText, setInputText] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [itinerary, setItinerary] = useState<Itinerary | null>(null)
+  const [showPanel, setShowPanel] = useState(false)
+  const [isPaid, setIsPaid] = useState(false)
+  const [currentStage, setCurrentStage] = useState<BookingStage>(BookingStage.Discovery)
+
   const [isHovered, setIsHovered] = useState(false)
+  const [isNearby, setIsNearby] = useState(false)
+  const [showWavingHand, setShowWavingHand] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const [isNearby, setIsNearby] = useState(false)
-  const [autoWave, setAutoWave] = useState(false)
-  const [handExtended, setHandExtended] = useState(false)
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
+  // Initialize chat with welcome message
   useEffect(() => {
-    const extendInterval = setInterval(() => {
-      if (!isOpen && !isHovered) {
-        setHandExtended(true)
-        setTimeout(() => {
-          setAutoWave(true)
-          setTimeout(() => {
-            setAutoWave(false)
-            setTimeout(() => setHandExtended(false), 500)
-          }, 2000)
-        }, 800)
-      }
-    }, 8000)
+    const welcomeMsg: Message = {
+      id: "init",
+      sender: Sender.Bot,
+      text: "يا هلا والله!\n\nأنا **جادوا**، رفيقك في السفر داخل المملكة.\n\nعلمني طال عمرك، وش اسمك الكريم؟\n\nيمكنك أيضاً الاستعلام عن حجوزاتك السابقة أو تذاكرك بذكر رقم الحجز.",
+      timestamp: new Date(),
+    }
+    setMessages([welcomeMsg])
+  }, [])
 
-    const initialExtend = setTimeout(() => {
-      if (!isOpen) {
-        setHandExtended(true)
-        setTimeout(() => {
-          setAutoWave(true)
-          setTimeout(() => {
-            setAutoWave(false)
-            setTimeout(() => setHandExtended(false), 500)
-          }, 2000)
-        }, 800)
+  useEffect(() => {
+    const waveInterval = setInterval(() => {
+      if (!isOpen && !isHovered) {
+        setShowWavingHand(true)
+        setTimeout(() => setShowWavingHand(false), 3000)
       }
-    }, 3000)
+    }, 5000)
+
+    // Initial wave after 2 seconds
+    const initialWave = setTimeout(() => {
+      if (!isOpen) {
+        setShowWavingHand(true)
+        setShowTooltip(true)
+        setTimeout(() => setShowWavingHand(false), 3000)
+      }
+    }, 2000)
 
     return () => {
-      clearInterval(extendInterval)
-      clearTimeout(initialExtend)
+      clearInterval(waveInterval)
+      clearTimeout(initialWave)
     }
   }, [isOpen, isHovered])
 
+  // Detect nearby mouse
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (!containerRef.current || isOpen) return
@@ -66,38 +76,36 @@ export default function AIChatWidget() {
       const centerX = rect.left + rect.width / 2
       const centerY = rect.top + rect.height / 2
       const distance = Math.sqrt(Math.pow(e.clientX - centerX, 2) + Math.pow(e.clientY - centerY, 2))
-      setIsNearby(distance < 150)
+      const nearby = distance < 150
+      setIsNearby(nearby)
+
+      // Show waving hand when nearby
+      if (nearby && !showWavingHand) {
+        setShowWavingHand(true)
+      }
     }
 
     window.addEventListener("mousemove", handleGlobalMouseMove)
     return () => window.removeEventListener("mousemove", handleGlobalMouseMove)
-  }, [isOpen])
+  }, [isOpen, showWavingHand])
 
+  // Hide tooltip after delay
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isOpen) setShowTooltip(true)
-    }, 5000)
+    const hideTimer = setTimeout(() => setShowTooltip(false), 8000)
+    return () => clearTimeout(hideTimer)
+  }, [showTooltip])
 
-    const hideTimer = setTimeout(() => {
-      setShowTooltip(false)
-    }, 12000)
-
-    return () => {
-      clearTimeout(timer)
-      clearTimeout(hideTimer)
-    }
-  }, [isOpen])
-
+  // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
+  // Focus input when opened
   useEffect(() => {
     if (isOpen) {
       inputRef.current?.focus()
       setShowTooltip(false)
-      setHandExtended(false)
-      setIsFullScreen(true)
+      setShowWavingHand(false)
     }
   }, [isOpen])
 
@@ -106,472 +114,436 @@ export default function AIChatWidget() {
     const rect = buttonRef.current.getBoundingClientRect()
     const centerX = rect.left + rect.width / 2
     const centerY = rect.top + rect.height / 2
-    const deltaX = (e.clientX - centerX) * 0.2
-    const deltaY = (e.clientY - centerY) * 0.2
+    const deltaX = (e.clientX - centerX) * 0.1
+    const deltaY = (e.clientY - centerY) * 0.1
     setMousePos({ x: deltaX, y: deltaY })
   }, [])
 
   const handleMouseLeave = useCallback(() => {
     setMousePos({ x: 0, y: 0 })
     setIsHovered(false)
+    setTimeout(() => setShowWavingHand(false), 500)
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim() || isLoading) return
+  const handleSendMessage = async (overrideText?: string) => {
+    const textToSend = overrideText || inputText
+    if (!textToSend.trim()) return
 
-    const userMessage: Message = {
+    const newMessage: Message = {
       id: Date.now().toString(),
-      role: "user",
-      content: input.trim(),
+      sender: Sender.User,
+      text: textToSend,
+      timestamp: new Date(),
     }
-
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
+    setMessages((prev) => [...prev, newMessage])
+    setInputText("")
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/api/jado-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [...messages, userMessage].map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-        }),
+        body: JSON.stringify({ message: textToSend }),
       })
 
-      if (!response.ok) throw new Error("Failed to get response")
+      const data = await response.json()
 
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder()
-
-      const assistantMessage: Message = {
+      const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "",
+        sender: Sender.Bot,
+        text: data.text || "عذراً، حصل خطأ. حاول مرة ثانية.",
+        timestamp: new Date(),
+        groundingChunks: data.groundingChunks,
+        proposal: data.proposal,
       }
 
-      setMessages((prev) => [...prev, assistantMessage])
+      setMessages((prev) => [...prev, botMessage])
 
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
+      if (data.proposal) {
+        setCurrentStage(BookingStage.Planning)
+      }
 
-          const chunk = decoder.decode(value)
-          const lines = chunk.split("\n")
-
-          for (const line of lines) {
-            if (line.startsWith("0:")) {
-              try {
-                const text = JSON.parse(line.slice(2))
-                setMessages((prev) => {
-                  const updated = [...prev]
-                  const lastMsg = updated[updated.length - 1]
-                  if (lastMsg.role === "assistant") {
-                    lastMsg.content += text
-                  }
-                  return updated
-                })
-              } catch {
-                // Skip invalid JSON
-              }
-            }
-          }
+      if (data.itinerary) {
+        setItinerary(data.itinerary)
+        setCurrentStage(BookingStage.Invoicing)
+        if (data.itinerary.status === "Draft" && !isPaid) {
+          setShowPanel(true)
         }
       }
     } catch (error) {
-      console.error("Chat error:", error)
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: "عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.",
-        },
-      ])
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleSuggestion = async (text: string) => {
-    if (isLoading) return
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: text,
-    }
-
-    setMessages((prev) => [...prev, userMessage])
-    setIsLoading(true)
-
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [...messages, userMessage].map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-        }),
-      })
-
-      if (!response.ok) throw new Error("Failed to get response")
-
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder()
-
-      const assistantMessage: Message = {
+      console.error("Error sending message:", error)
+      const errorMsg: Message = {
         id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "",
+        sender: Sender.Bot,
+        text: "معليش علقت شوي.. النت يستهبل دقيقة وأرجع لك!",
+        timestamp: new Date(),
       }
+      setMessages((prev) => [...prev, errorMsg])
+    }
 
-      setMessages((prev) => [...prev, assistantMessage])
+    setIsLoading(false)
+  }
 
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
+  const handleOptionSelect = (option: ProposalOption) => {
+    handleSendMessage(`اعتمد لي خيار: ${option.title}`)
+  }
 
-          const chunk = decoder.decode(value)
-          const lines = chunk.split("\n")
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
 
-          for (const line of lines) {
-            if (line.startsWith("0:")) {
-              try {
-                const parsedText = JSON.parse(line.slice(2))
-                setMessages((prev) => {
-                  const updated = [...prev]
-                  const lastMsg = updated[updated.length - 1]
-                  if (lastMsg.role === "assistant") {
-                    lastMsg.content += parsedText
-                  }
-                  return updated
-                })
-              } catch {
-                // Skip invalid JSON
-              }
-            }
-          }
-        }
+    const reader = new FileReader()
+    reader.onloadend = async () => {
+      const base64String = reader.result as string
+
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        sender: Sender.User,
+        text: "صورة مرفقة",
+        imageUrl: base64String,
+        timestamp: new Date(),
       }
-    } catch (error) {
-      console.error("Chat error:", error)
-      setMessages((prev) => [
-        ...prev,
-        {
+      setMessages((prev) => [...prev, newMessage])
+      setIsLoading(true)
+
+      try {
+        const response = await fetch("/api/jado-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: "وش رايك في هالمكان؟",
+            imageBase64: base64String.split(",")[1],
+          }),
+        })
+
+        const data = await response.json()
+
+        const botMessage: Message = {
           id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: "عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.",
-        },
-      ])
-    } finally {
+          sender: Sender.Bot,
+          text: data.text,
+          timestamp: new Date(),
+          groundingChunks: data.groundingChunks,
+        }
+        setMessages((prev) => [...prev, botMessage])
+      } catch (error) {
+        console.error("Error:", error)
+      }
+
       setIsLoading(false)
+    }
+    reader.readAsDataURL(file)
+    event.target.value = ""
+  }
+
+  const handleItineraryAction = async (email: string) => {
+    if (itinerary?.status === "Draft") {
+      setShowPanel(false)
+      setIsPaid(true)
+      setIsLoading(true)
+      setCurrentStage(BookingStage.Paid)
+
+      const systemTrigger = `[PAYMENT_SUCCESSFUL: البريد: ${email}. العميل دفع. أرجع الفاتورة بحالة 'Paid']`
+
+      try {
+        const response = await fetch("/api/jado-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: systemTrigger }),
+        })
+
+        const data = await response.json()
+
+        if (data.itinerary) {
+          setItinerary(data.itinerary)
+        }
+
+        const msg: Message = {
+          id: Date.now().toString(),
+          sender: Sender.Bot,
+          text: data.text || "تم الدفع بنجاح! تذكرتك جاهزة.",
+          timestamp: new Date(),
+        }
+        setMessages((prev) => [...prev, msg])
+      } catch (e) {
+        console.error("Error triggering payment", e)
+      } finally {
+        setIsLoading(false)
+        setTimeout(() => setShowPanel(true), 1500)
+      }
     }
   }
 
-  const showHand = handExtended || isHovered || isNearby
-
-  const handleClose = () => {
-    setIsOpen(false)
-    setIsFullScreen(true)
-  }
+  // Quick actions for mobile
+  const quickActions = [
+    { label: "الباقات المتاحة", icon: "🎯" },
+    { label: "حجوزاتي السابقة", icon: "📋" },
+    { label: "تذاكري", icon: "🎫" },
+    { label: "تواصل مع فريقنا", icon: "📞" },
+  ]
 
   return (
     <>
+      {/* Floating Button with Jado Avatar and Waving Hand */}
       {!isOpen && (
         <div ref={containerRef} className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
+          {/* Tooltip */}
           <div
-            className="absolute top-1/2 right-full -translate-y-1/2 flex items-center pointer-events-none"
+            className={`absolute bottom-full right-0 mb-3 transition-all duration-500 ${showTooltip ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"}`}
+          >
+            <div className="bg-white text-[#001C43] px-4 py-3 rounded-2xl shadow-xl border border-[#c8a45e]/30 text-sm whitespace-nowrap font-bold">
+              هلا! كيف أقدر أساعدك؟
+              <div className="absolute -bottom-2 right-6 w-4 h-4 bg-white border-b border-r border-[#c8a45e]/30 transform rotate-45"></div>
+            </div>
+          </div>
+
+          <div
+            className={`absolute transition-all duration-700 ease-out ${showWavingHand || isHovered ? "opacity-100" : "opacity-0"}`}
             style={{
-              opacity: showHand ? 1 : 0,
-              transition: "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
+              left: "-60px",
+              top: "50%",
+              transform: `translateY(-50%) ${showWavingHand || isHovered ? "translateX(0)" : "translateX(20px)"}`,
             }}
           >
-            <div
-              className="h-3 bg-gradient-to-l from-amber-300 via-amber-200 to-amber-100 rounded-full relative"
-              style={{
-                width: showHand ? "120px" : "0px",
-                transition: "width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-              }}
-            >
-              <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-center">
-                <div className="w-full h-0.5 bg-amber-400/30 rounded-full" />
-              </div>
-            </div>
-
+            {/* Arm extending from avatar */}
             <div
               className="relative"
               style={{
-                transform: showHand ? "translateX(0) scale(1)" : "translateX(50px) scale(0)",
-                opacity: showHand ? 1 : 0,
-                transition: "all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s",
+                animation: showWavingHand ? "extendArm 0.5s ease-out forwards" : "none",
               }}
             >
-              <span
-                className="text-3xl sm:text-4xl block"
+              {/* Arm */}
+              <div
+                className="absolute right-0 top-1/2 -translate-y-1/2 h-4 bg-gradient-to-l from-[#d4a574] to-[#c8956a] rounded-full origin-right"
                 style={{
-                  filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.3))",
-                  transformOrigin: "70% 80%",
-                  animation: autoWave ? "waveHand 1s ease-in-out infinite" : "none",
+                  width: showWavingHand || isHovered ? "50px" : "0px",
+                  transition: "width 0.5s ease-out",
+                }}
+              />
+              {/* Hand */}
+              <div
+                className="text-4xl"
+                style={{
+                  animation: showWavingHand ? "waveHandAnimation 0.5s ease-in-out infinite" : "none",
+                  transformOrigin: "bottom center",
                 }}
               >
                 👋
-              </span>
-              {showHand && (
-                <>
-                  <span className="absolute -top-2 -left-1 text-xs animate-pulse">✨</span>
-                  <span className="absolute -bottom-1 left-0 text-xs animate-pulse" style={{ animationDelay: "0.3s" }}>
-                    ⭐
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div
-            className={`absolute bottom-full right-0 mb-3 transition-all duration-500 ${showTooltip && !showHand ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"}`}
-          >
-            <div className="bg-card text-card-foreground px-3 py-2 rounded-xl shadow-lg border border-border text-xs sm:text-sm whitespace-nowrap">
-              كيف أقدر أساعدك؟ 💬
-              <div className="absolute bottom-0 right-4 translate-y-full">
-                <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-transparent border-t-card" />
               </div>
             </div>
           </div>
 
+          {/* Main Button with Jado Image */}
           <button
             ref={buttonRef}
             onClick={() => setIsOpen(true)}
-            onMouseEnter={() => setIsHovered(true)}
+            onMouseEnter={() => {
+              setIsHovered(true)
+              setShowWavingHand(true)
+            }}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             className="relative flex items-center justify-center transition-all duration-300 ease-out group"
             style={{
-              transform: `translate(${mousePos.x}px, ${mousePos.y}px) scale(${isNearby && !isHovered ? 1.05 : 1})`,
+              transform: `translate(${mousePos.x}px, ${mousePos.y}px) scale(${isHovered ? 1.1 : isNearby ? 1.05 : 1})`,
             }}
           >
+            {/* Glow Effect */}
             <div
-              className={`absolute -inset-4 rounded-full bg-gradient-to-r from-accent to-jado-orange blur-xl transition-all duration-500 ${isHovered ? "opacity-60" : isNearby || handExtended ? "opacity-40" : "opacity-20"}`}
+              className={`absolute -inset-4 rounded-full transition-all duration-500 ${isHovered || isNearby ? "opacity-100" : "opacity-50"}`}
+              style={{
+                background: `radial-gradient(circle, rgba(200,164,94,${isHovered ? 0.5 : 0.3}) 0%, transparent 70%)`,
+                animation: isNearby && !isHovered ? "pulse 2s ease-in-out infinite" : "none",
+              }}
             />
 
+            {/* Avatar Container - Static, no shake */}
             <div
-              className={`absolute -inset-1 rounded-full bg-gradient-to-r from-accent via-jado-orange to-accent transition-all duration-300 ${isHovered ? "opacity-100" : "opacity-70"}`}
-              style={{
-                padding: "2px",
-                animation: isHovered ? "spin 3s linear infinite" : "none",
-              }}
+              className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden shadow-2xl transition-all duration-300 border-4 ${isHovered ? "border-[#c8a45e]" : "border-white"}`}
             >
-              <div className="w-full h-full rounded-full bg-primary" />
+              <img src={JADO_AVATAR || "/placeholder.svg"} alt="جادوا" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#001c43]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
 
-            <div
-              className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-accent to-jado-orange flex items-center justify-center shadow-xl transition-all duration-300 ${isHovered ? "scale-105" : ""}`}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="sm:w-6 sm:h-6"
-              >
-                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-              </svg>
-
-              <div className="absolute -top-0.5 -right-0.5">
-                <div className="w-3 h-3 bg-green-500 rounded-full border-2 border-primary">
-                  <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75" />
-                </div>
-              </div>
+            {/* Online indicator */}
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-3 border-white shadow-lg">
+              <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75" />
             </div>
           </button>
         </div>
       )}
 
+      {/* Chat Window - Full Screen on Mobile */}
       {isOpen && (
-        <div
-          className={`fixed z-50 bg-card shadow-2xl overflow-hidden flex flex-col animate-slideUp transition-all duration-300 ${
-            isFullScreen
-              ? "inset-0 rounded-none"
-              : "inset-4 sm:inset-auto sm:bottom-4 sm:right-4 sm:w-[380px] sm:h-[520px] rounded-2xl border border-border"
-          }`}
-        >
-          <div className="bg-primary text-primary-foreground p-4 relative">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-accent to-jado-orange flex items-center justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="sm:w-6 sm:h-6"
-                    >
-                      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-                    </svg>
+        <div className="fixed inset-0 z-50 flex flex-col md:flex-row bg-[#f5f3ef]">
+          {/* Main Chat Area */}
+          <div
+            className={`flex flex-col h-full transition-all duration-500 ${showPanel ? "hidden md:flex md:w-2/5" : "w-full"}`}
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-l from-[#001C43] to-[#002855] p-3 sm:p-4 shadow-lg safe-area-top">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-[#c8a45e] shadow-lg bg-white">
+                    <img src={JADO_AVATAR || "/placeholder.svg"} alt="جادوا" className="w-full h-full object-cover" />
                   </div>
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-primary" />
+                  <div>
+                    <h1 className="font-bold text-white text-base sm:text-lg">جادوا</h1>
+                    <p className="text-xs text-[#c8a45e]">رفيقك في السفر</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-base sm:text-lg">مساعد جادوا</h3>
-                  <p className="text-xs sm:text-sm text-white/60">متصل الآن • جاهز لمساعدتك</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsFullScreen(!isFullScreen)}
-                  className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all"
-                  title={isFullScreen ? "تصغير" : "تكبير"}
-                >
-                  {isFullScreen ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M8 3H5a2 2 0 0 0-2 2v3" />
-                      <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
-                      <path d="M3 16v3a2 2 0 0 0 2 2h3" />
-                      <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
-                    </svg>
-                  ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M8 3H5a2 2 0 0 0-2 2v3" />
-                      <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
-                      <path d="M3 16v3a2 2 0 0 0 2 2h3" />
-                      <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
-                    </svg>
-                  )}
-                </button>
-                <button
-                  onClick={handleClose}
-                  className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M18 6 6 18" />
-                    <path d="m6 6 12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 bg-background">
-            {messages.length === 0 && (
-              <div className="text-center py-8 sm:py-12">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 rounded-2xl bg-accent/10 flex items-center justify-center">
-                  <span className="text-4xl sm:text-5xl">🌟</span>
-                </div>
-                <h4 className="text-lg sm:text-xl font-bold text-foreground mb-2">مرحباً بك في مساعد جادوا!</h4>
-                <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-md mx-auto">
-                  أنا هنا لمساعدتك في التخطيط لرحلتك المثالية. اسألني عن أي شيء!
-                </p>
-                <div className="flex flex-wrap gap-2 justify-center max-w-lg mx-auto">
-                  {[
-                    "ما هي الباقات المتاحة؟",
-                    "أريد حجز رحلة للعلا",
-                    "ما أفضل وقت لزيارة أبها؟",
-                    "كم سعر رحلة جدة؟",
-                  ].map((suggestion) => (
+                <div className="flex gap-2">
+                  {itinerary && !showPanel && (
                     <button
-                      key={suggestion}
-                      onClick={() => handleSuggestion(suggestion)}
-                      disabled={isLoading}
-                      className="px-4 py-2 text-sm bg-secondary/50 text-secondary-foreground rounded-full hover:bg-accent hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => setShowPanel(true)}
+                      className="text-[#001C43] bg-[#c8a45e] hover:bg-[#d4b06a] text-xs sm:text-sm font-bold px-3 py-2 rounded-xl flex items-center gap-1 transition-colors"
                     >
-                      {suggestion}
+                      <span>{isPaid ? "تذكرتي" : "العرض"}</span>
                     </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {messages.map((message) => (
-              <div key={message.id} className={`flex gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}>
-                <div
-                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${message.role === "user" ? "bg-accent text-white" : "bg-primary text-primary-foreground"}`}
-                >
-                  {message.role === "user" ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                  ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-                    </svg>
                   )}
-                </div>
-                <div
-                  className={`max-w-[75%] rounded-2xl px-4 py-3 ${message.role === "user" ? "bg-accent text-white rounded-tr-sm" : "bg-card border border-border text-card-foreground rounded-tl-sm"}`}
-                >
-                  <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-colors text-lg"
+                  >
+                    ✕
+                  </button>
                 </div>
               </div>
-            ))}
 
-            {isLoading && messages[messages.length - 1]?.role === "user" && (
-              <div className="flex gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-                  </svg>
-                </div>
-                <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-4 py-3">
-                  <div className="flex gap-1.5">
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
-                    <div
-                      className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
-                      style={{ animationDelay: "0.1s" }}
-                    />
-                    <div
-                      className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
-                      style={{ animationDelay: "0.2s" }}
-                    />
+              {/* Progress Bar */}
+              <div className="mt-3">
+                <JadoProgressBar currentStage={currentStage} />
+              </div>
+            </div>
+
+            <div className="flex gap-2 p-3 overflow-x-auto bg-white border-b border-[#c8a45e]/10 md:hidden">
+              {quickActions.map((action, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleSendMessage(action.label)}
+                  className="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-[#f5f3ef] rounded-full text-xs font-medium text-[#001C43] border border-[#c8a45e]/20 hover:bg-[#c8a45e]/10 transition-colors"
+                >
+                  <span>{action.icon}</span>
+                  <span>{action.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
+              {messages.map((msg) => (
+                <JadoMessageBubble key={msg.id} message={msg} onSelectOption={handleOptionSelect} />
+              ))}
+              {isLoading && (
+                <div className="flex justify-end mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden border border-[#c8a45e]">
+                      <img src={JADO_AVATAR || "/placeholder.svg"} alt="جادوا" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-none shadow-sm flex items-center gap-2 border border-[#c8a45e]/20">
+                      <span className="text-xs text-[#c8a45e] font-bold ml-2">يكتب...</span>
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-[#001C43] rounded-full animate-bounce" />
+                        <div
+                          className="w-2 h-2 bg-[#001C43] rounded-full animate-bounce"
+                          style={{ animationDelay: "0.1s" }}
+                        />
+                        <div
+                          className="w-2 h-2 bg-[#001C43] rounded-full animate-bounce"
+                          style={{ animationDelay: "0.2s" }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input Area - Mobile Optimized */}
+            <div className="p-3 sm:p-4 bg-white border-t border-[#c8a45e]/20 shadow-lg safe-area-bottom">
+              <div className="flex items-center gap-2 sm:gap-3 bg-[#f5f3ef] p-2 rounded-2xl border border-[#c8a45e]/20">
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-10 h-10 flex items-center justify-center text-[#6B7280] hover:text-[#001C43] hover:bg-white rounded-full transition-all text-lg"
+                >
+                  📷
+                </button>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                  placeholder="سولف مع جادوا..."
+                  className="flex-1 bg-transparent border-none focus:outline-none text-right text-[#001C43] placeholder-gray-400 px-2 py-2 text-sm sm:text-base min-w-0"
+                  dir="rtl"
+                />
+                <button
+                  onClick={() => handleSendMessage()}
+                  disabled={!inputText.trim() || isLoading}
+                  className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-[#001C43] to-[#002855] text-white rounded-full hover:from-[#002855] hover:to-[#003366] transition-all shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                >
+                  <svg
+                    className="w-4 h-4 sm:w-5 sm:h-5 rotate-180"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                    />
+                  </svg>
+                </button>
               </div>
-            )}
-            <div ref={messagesEndRef} />
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-4 border-t border-border bg-card">
-            <div className="flex gap-3 max-w-4xl mx-auto">
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="اكتب رسالتك هنا..."
-                className="flex-1 px-4 py-3 text-sm sm:text-base bg-muted rounded-xl border-0 focus:outline-none focus:ring-2 focus:ring-accent"
-                disabled={isLoading}
-              />
+          {/* Side Panel (Invoice/Timeline) - Mobile: Full Screen */}
+          {showPanel && itinerary && (
+            <div className="flex-1 relative">
               <button
-                type="submit"
-                disabled={isLoading || !input.trim()}
-                className="w-12 h-12 rounded-xl bg-accent hover:bg-accent/90 text-white flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => setShowPanel(false)}
+                className="absolute top-3 left-3 sm:top-4 sm:left-4 z-50 bg-[#001C43]/90 backdrop-blur-md text-white px-3 py-2 rounded-full text-xs sm:text-sm font-bold shadow-lg flex items-center gap-2 hover:bg-[#001C43] transition-colors"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="m22 2-7 20-4-9-9-4Z" />
-                  <path d="M22 2 11 13" />
-                </svg>
+                ✕ رجوع
               </button>
+              {isPaid ? (
+                <JadoTimelineView itinerary={itinerary} />
+              ) : (
+                <JadoItineraryView itinerary={itinerary} onConfirm={handleItineraryAction} />
+              )}
             </div>
-          </form>
+          )}
         </div>
       )}
+
+      {/* CSS Animations */}
+      <style jsx global>{`
+        @keyframes waveHandAnimation {
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(20deg); }
+          50% { transform: rotate(-10deg); }
+          75% { transform: rotate(20deg); }
+        }
+        
+        @keyframes extendArm {
+          0% { width: 0; }
+          100% { width: 50px; }
+        }
+        
+        .safe-area-top {
+          padding-top: max(0.75rem, env(safe-area-inset-top));
+        }
+        
+        .safe-area-bottom {
+          padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+        }
+      `}</style>
     </>
   )
 }
